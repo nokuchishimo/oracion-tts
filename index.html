@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oraciones con Audio - Sistema Completo</title>
+    <meta name="description" content="Escucha oraciones y salmos narrados con voz profesional AI">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🙏 Oraciones y Salmos</h1>
+            <p class="subtitle">Escucha la palabra de Dios con voz profesional AI</p>
+        </header>
+
+        <main>
+            <!-- Вкладки -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="library">📚 Biblioteca</button>
+                <button class="tab-btn" data-tab="custom">➕ Agregar Nueva</button>
+                <button class="tab-btn" data-tab="cache">💾 Caché</button>
+            </div>
+
+            <!-- Вкладка: Бібліотека -->
+            <div class="tab-content active" id="library-tab">
+                <div class="prayer-selector">
+                    <label for="prayer-select">Selecciona una oración:</label>
+                    <select id="prayer-select">
+                        <option value="salmo23">Salmo 23 - El Señor es mi pastor</option>
+                        <option value="salmo91">Salmo 91 - El que habita al abrigo</option>
+                        <option value="salmo121">Salmo 121 - Alzaré mis ojos</option>
+                    </select>
+                </div>
+
+                <div class="prayer-box">
+                    <h2 id="prayer-title">Salmo 23</h2>
+                    <div class="prayer-text" id="prayer-text"></div>
+                    <div class="cache-status" id="cache-status"></div>
+                </div>
+
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+
+                <div class="controls">
+                    <button id="playButton" class="btn-primary">
+                        🔊 Escuchar Oración
+                    </button>
+                    <button id="stopButton" class="btn-secondary" style="display: none;">
+                        ⏹️ Detener
+                    </button>
+                    <button id="downloadButton" class="btn-download" style="display: none;">
+                        💾 Descargar Audio
+                    </button>
+                </div>
+
+                <div id="status" class="status"></div>
+            </div>
+
+            <!-- Вкладка: Додати нову -->
+            <div class="tab-content" id="custom-tab">
+                <div class="custom-prayer-form">
+                    <h2>Agregar Nueva Oración</h2>
+                    
+                    <div class="form-group">
+                        <label for="custom-title">Título de la oración:</label>
+                        <input type="text" id="custom-title" placeholder="Ejemplo: Salmo 40" maxlength="100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="custom-text">Texto de la oración:</label>
+                        <textarea id="custom-text" rows="15" placeholder="Escribe o pega aquí el texto completo de la oración (hasta 40,000 caracteres)..."></textarea>
+                        <div class="char-count" id="char-count">0 caracteres</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button id="addPrayerBtn" class="btn-primary">
+                            ✅ Guardar Oración
+                        </button>
+                        <button id="clearFormBtn" class="btn-secondary">
+                            🗑️ Limpiar
+                        </button>
+                    </div>
+
+                    <div id="form-status" class="status"></div>
+                </div>
+
+                <div class="custom-prayers-list" id="custom-prayers-list">
+                    <h3>Oraciones Guardadas</h3>
+                    <div id="custom-prayers-container"></div>
+                </div>
+            </div>
+
+            <!-- Вкладка: Кеш -->
+            <div class="tab-content" id="cache-tab">
+                <div class="cache-management">
+                    <h2>Gestión de Caché de Audio</h2>
+                    
+                    <div class="cache-info">
+                        <p>🔹 <strong>Audios en caché:</strong> <span id="cached-count">0</span></p>
+                        <p>🔹 <strong>Tamaño total:</strong> <span id="cache-size">0 KB</span></p>
+                        <p class="help-text">
+                            ℹ️ Los audios se generan una vez y se guardan automáticamente. 
+                            La próxima vez se reproducen instantáneamente desde la memoria del navegador.
+                        </p>
+                    </div>
+
+                    <div id="cache-list"></div>
+
+                    <div class="cache-actions">
+                        <button id="clearCacheBtn" class="btn-danger">
+                            🗑️ Limpiar Todo el Caché
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Creado con ❤️ usando Google Gemini AI • Audio fusionado automáticamente</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
