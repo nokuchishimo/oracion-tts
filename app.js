@@ -1,5 +1,5 @@
 // ⚠️ ВАЖЛИВО: Замініть на ваш Web App URL з Apps Script
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwKLUhIezEuqmnqBwoQVwpf1PjIe2c3yhHv8wRLerpQ0IGR_KLvQsB8ovx4uc3cnMCUSw/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzv8MdvSBpfzIuRPtWziCEGC1jj0DVXojJlKsDT6WtLkrnszKDV9ygfyxqBTMwNpSPdJw/exec';
 
 // База даних молитов
 const DEFAULT_PRAYERS = {
@@ -642,3 +642,4 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
