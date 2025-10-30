@@ -198,12 +198,16 @@ async function mergeAudioChunks(audioChunksBase64) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffers = [];
     
-    for (const base64Audio of audioChunksBase64) {
-        const audioBlob = base64ToBlob(base64Audio, 'audio/mpeg');
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-        audioBuffers.push(audioBuffer);
-    }
+  for (const base64Audio of audioChunksBase64) {
+    const audioBlob = base64ToBlob(base64Audio, 'audio/mpeg');
+    const audioUrl = URL.createObjectURL(audioBlob);
+    window.open(audioUrl); // 🔎 Додаю сюди — відкриє файл у новій вкладці
+
+    const arrayBuffer = await audioBlob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    audioBuffers.push(audioBuffer);
+}
+
     
     const totalLength = audioBuffers.reduce((sum, buffer) => sum + buffer.length, 0);
     const numberOfChannels = audioBuffers[0].numberOfChannels;
@@ -648,6 +652,7 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
 
