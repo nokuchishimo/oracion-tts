@@ -433,6 +433,8 @@ playButton.addEventListener('click', async () => {
             });
 
             const data = await response.json();
+            console.log('дані від worker:', data);
+
             
             if (data.success) {
                 statusDiv.textContent = `✅ Fusionando ${data.totalChunks} fragmentos...`;
@@ -642,4 +644,5 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
