@@ -66,17 +66,14 @@ class AudioCache {
         this.storeName = 'audioFiles';
         this.db = null;
     }
-
     async init() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, 1);
-            
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
                 this.db = request.result;
                 resolve();
             };
-            
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
@@ -87,12 +84,10 @@ class AudioCache {
             };
         });
     }
-
     async saveAudio(id, title, mergedBlob) {
         const base64 = await this.blobToBase64(mergedBlob);
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        
         const data = {
             id: id,
             title: title,
@@ -100,58 +95,48 @@ class AudioCache {
             timestamp: Date.now(),
             size: mergedBlob.size
         };
-        
         return new Promise((resolve, reject) => {
             const request = store.put(data);
             request.onsuccess = () => resolve();
             request.onerror = () => reject(request.error);
         });
     }
-
     async getAudio(id) {
         const transaction = this.db.transaction([this.storeName], 'readonly');
         const store = transaction.objectStore(this.storeName);
-        
         return new Promise((resolve, reject) => {
             const request = store.get(id);
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
     }
-
     async deleteAudio(id) {
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        
         return new Promise((resolve, reject) => {
             const request = store.delete(id);
             request.onsuccess = () => resolve();
             request.onerror = () => reject(request.error);
         });
     }
-
     async getAllAudio() {
         const transaction = this.db.transaction([this.storeName], 'readonly');
         const store = transaction.objectStore(this.storeName);
-        
         return new Promise((resolve, reject) => {
             const request = store.getAll();
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
     }
-
     async clearAll() {
         const transaction = this.db.transaction([this.storeName], 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        
         return new Promise((resolve, reject) => {
             const request = store.clear();
             request.onsuccess = () => resolve();
             request.onerror = () => reject(request.error);
         });
     }
-
     blobToBase64(blob) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -170,24 +155,20 @@ class PrayerStorage {
     constructor() {
         this.storageKey = 'customPrayers';
     }
-
     getAll() {
         const data = localStorage.getItem(this.storageKey);
         return data ? JSON.parse(data) : {};
     }
-
     save(id, title, text) {
         const prayers = this.getAll();
         prayers[id] = { title, text };
         localStorage.setItem(this.storageKey, JSON.stringify(prayers));
     }
-
     delete(id) {
         const prayers = this.getAll();
         delete prayers[id];
         localStorage.setItem(this.storageKey, JSON.stringify(prayers));
     }
-
     getAllCombined() {
         return { ...DEFAULT_PRAYERS, ...this.getAll() };
     }
@@ -197,24 +178,19 @@ class PrayerStorage {
 async function mergeAudioChunks(audioChunksBase64) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffers = [];
-    
-  for (const base64Audio of audioChunksBase64) {
-  const audioBlob = base64ToBlob(base64Audio, 'audio/ogg; codecs=opus');
-    const audioUrl = URL.createObjectURL(audioBlob);
-    window.open(audioUrl); // 🔎 Додаю сюди — відкриє файл у новій вкладці
+    for (const base64Audio of audioChunksBase64) {
+        const audioBlob = base64ToBlob(base64Audio, 'audio/ogg; codecs=opus');
+        const audioUrl = URL.createObjectURL(audioBlob);
+        window.open(audioUrl); // Для діагностики можна вимкнути пізніше
 
-    const arrayBuffer = await audioBlob.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    audioBuffers.push(audioBuffer);
-}
-
-    
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        audioBuffers.push(audioBuffer);
+    }
     const totalLength = audioBuffers.reduce((sum, buffer) => sum + buffer.length, 0);
     const numberOfChannels = audioBuffers[0].numberOfChannels;
     const sampleRate = audioBuffers[0].sampleRate;
-    
     const mergedBuffer = audioContext.createBuffer(numberOfChannels, totalLength, sampleRate);
-    
     let offset = 0;
     for (const buffer of audioBuffers) {
         for (let channel = 0; channel < numberOfChannels; channel++) {
@@ -223,7 +199,6 @@ async function mergeAudioChunks(audioChunksBase64) {
         }
         offset += buffer.length;
     }
-    
     return audioBufferToWav(mergedBuffer);
 }
 
@@ -232,18 +207,15 @@ function audioBufferToWav(buffer) {
     const sampleRate = buffer.sampleRate;
     const format = 1;
     const bitDepth = 16;
-    
     let result;
     if (numberOfChannels === 2) {
         result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
     } else {
         result = buffer.getChannelData(0);
     }
-    
     const length = result.length * 2 + 44;
     const bufferArray = new ArrayBuffer(length);
     const view = new DataView(bufferArray);
-    
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + result.length * 2, true);
     writeString(view, 8, 'WAVE');
@@ -257,9 +229,7 @@ function audioBufferToWav(buffer) {
     view.setUint16(34, bitDepth, true);
     writeString(view, 36, 'data');
     view.setUint32(40, result.length * 2, true);
-    
     floatTo16BitPCM(view, 44, result);
-    
     return new Blob([bufferArray], { type: 'audio/wav' });
 }
 
@@ -268,7 +238,6 @@ function interleave(leftChannel, rightChannel) {
     const result = new Float32Array(length);
     let index = 0;
     let inputIndex = 0;
-    
     while (index < length) {
         result[index++] = leftChannel[inputIndex];
         result[index++] = rightChannel[inputIndex];
@@ -437,14 +406,11 @@ playButton.addEventListener('click', async () => {
             });
 
             const data = await response.json();
-            console.log('audioChunks[0]:', data.audioChunks[0]);      // Виведе текст base64 або помилку
-console.log('audioChunks[0] тип:', typeof data.audioChunks[0]);
-console.log('audioChunks[0] довжина:', data.audioChunks[0]?.length);
-
-
-
+            console.log('audioChunks[0]:', data.audioChunks[0]);
+            console.log('audioChunks[0] тип:', typeof data.audioChunks[0]);
+            console.log('audioChunks[0] довжина:', data.audioChunks[0]?.length);
             
-            if (data.success) {
+            if (Array.isArray(data.audioChunks) && data.audioChunks.length > 0 && data.audioChunks[0]) {
                 statusDiv.textContent = `✅ Fusionando ${data.totalChunks} fragmentos...`;
                 updateProgress(50);
                 
@@ -458,10 +424,14 @@ console.log('audioChunks[0] довжина:', data.audioChunks[0]?.length);
                 
                 playMergedAudio(mergedBlob);
             } else {
-                throw new Error(data.error || 'Error desconocido');
+                statusDiv.textContent = '❌ Error: API не повернуло аудіо-дані (audioChunks пустий)';
+                playButton.disabled = false;
+                playButton.textContent = '🔊 Escuchar Oración';
+                progressContainer.classList.remove('active');
+                console.error('Помилка: audioChunks відсутній або порожній', data.audioChunks);
+                return;
             }
         }
-        
     } catch (error) {
         console.error('Error:', error);
         statusDiv.textContent = '❌ Error: ' + error.message;
@@ -652,12 +622,3 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
-
-
-
-
-
-
-
-
-
