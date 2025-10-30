@@ -174,15 +174,34 @@ class PrayerStorage {
     }
 }
 
+// ==================== Допоміжні функції ====================
+function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+}
+
+function downloadBase64File(base64, filename, mimeType) {
+    const blob = base64ToBlob(base64, mimeType);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
 // ==================== Склеювання аудіо ====================
 async function mergeAudioChunks(audioChunksBase64) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const audioBuffers = [];
     for (const base64Audio of audioChunksBase64) {
         const audioBlob = base64ToBlob(base64Audio, 'audio/ogg; codecs=opus');
-        const audioUrl = URL.createObjectURL(audioBlob);
-        window.open(audioUrl); // Для діагностики можна вимкнути пізніше
-
+        downloadBase64File(base64Audio, 'test_audio.ogg', 'audio/ogg'); // Автоматичний завантаження для перевірки
         const arrayBuffer = await audioBlob.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         audioBuffers.push(audioBuffer);
@@ -259,16 +278,6 @@ function floatTo16BitPCM(view, offset, input) {
     }
 }
 
-function base64ToBlob(base64, mimeType) {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
-}
-
 // ==================== Ініціалізація ====================
 const audioCache = new AudioCache();
 const prayerStorage = new PrayerStorage();
@@ -319,13 +328,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 tabButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const tabId = btn.dataset.tab;
-        
         tabButtons.forEach(b => b.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
-        
         btn.classList.add('active');
         document.getElementById(`${tabId}-tab`).classList.add('active');
-        
         if (tabId === 'cache') {
             updateCacheInfo();
         }
@@ -336,7 +342,6 @@ tabButtons.forEach(btn => {
 function loadPrayerSelect() {
     const allPrayers = prayerStorage.getAllCombined();
     prayerSelect.innerHTML = '';
-    
     Object.keys(allPrayers).forEach(id => {
         const option = document.createElement('option');
         option.value = id;
@@ -348,7 +353,6 @@ function loadPrayerSelect() {
 function loadPrayer(id) {
     const allPrayers = prayerStorage.getAllCombined();
     const prayer = allPrayers[id];
-    
     if (prayer) {
         currentPrayerId = id;
         prayerTitle.textContent = prayer.title;
@@ -377,20 +381,16 @@ prayerSelect.addEventListener('change', (e) => {
 // ==================== Відтворення з кешем та склеюванням ====================
 playButton.addEventListener('click', async () => {
     const text = prayerText.textContent.trim();
-    
     if (!text) {
         statusDiv.textContent = '⚠️ No hay texto para narrar';
         return;
     }
-    
     playButton.disabled = true;
     playButton.textContent = '⏳ Cargando...';
     progressContainer.classList.add('active');
     updateProgress(0);
-    
     try {
         const cached = await audioCache.getAudio(currentPrayerId);
-        
         if (cached) {
             statusDiv.innerHTML = '<span class="loader"></span>Cargando desde caché...';
             const audioBlob = base64ToBlob(cached.audioData, 'audio/wav');
@@ -398,30 +398,25 @@ playButton.addEventListener('click', async () => {
             playMergedAudio(audioBlob);
         } else {
             statusDiv.innerHTML = '<span class="loader"></span>Generando audio...';
-            
             const response = await fetch(WEB_APP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text })
             });
-
             const data = await response.json();
             console.log('audioChunks[0]:', data.audioChunks[0]);
             console.log('audioChunks[0] тип:', typeof data.audioChunks[0]);
             console.log('audioChunks[0] довжина:', data.audioChunks[0]?.length);
-            
             if (Array.isArray(data.audioChunks) && data.audioChunks.length > 0 && data.audioChunks[0]) {
+                downloadBase64File(data.audioChunks[0], 'test_audio.ogg', 'audio/ogg');
                 statusDiv.textContent = `✅ Fusionando ${data.totalChunks} fragmentos...`;
                 updateProgress(50);
-                
                 const mergedBlob = await mergeAudioChunks(data.audioChunks);
                 mergedAudioBlob = mergedBlob;
-                
                 await audioCache.saveAudio(currentPrayerId, prayerTitle.textContent, mergedBlob);
                 statusDiv.textContent = '✅ Audio fusionado y guardado';
                 checkCache(currentPrayerId);
                 updateProgress(100);
-                
                 playMergedAudio(mergedBlob);
             } else {
                 statusDiv.textContent = '❌ Error: API не повернуло аудіо-дані (audioChunks пустий)';
@@ -444,12 +439,10 @@ playButton.addEventListener('click', async () => {
 function playMergedAudio(blob) {
     const audioUrl = URL.createObjectURL(blob);
     currentAudio = new Audio(audioUrl);
-    
     statusDiv.textContent = '🔊 Reproduciendo...';
     playButton.textContent = '⏸️ Reproduciendo';
     stopButton.style.display = 'block';
     downloadButton.style.display = 'block';
-    
     currentAudio.onended = () => {
         statusDiv.textContent = '✅ Reproducción completada';
         playButton.disabled = false;
@@ -458,12 +451,10 @@ function playMergedAudio(blob) {
         progressContainer.classList.remove('active');
         URL.revokeObjectURL(audioUrl);
     };
-    
     currentAudio.onerror = () => {
         statusDiv.textContent = '❌ Error al reproducir';
         stopAudio();
     };
-    
     currentAudio.play();
     progressContainer.classList.remove('active');
 }
@@ -488,7 +479,6 @@ downloadButton.addEventListener('click', () => {
         statusDiv.textContent = '⚠️ Primero genera el audio';
         return;
     }
-    
     const url = URL.createObjectURL(mergedAudioBlob);
     const a = document.createElement('a');
     a.href = url;
@@ -512,23 +502,18 @@ customText.addEventListener('input', () => {
 addPrayerBtn.addEventListener('click', () => {
     const title = customTitle.value.trim();
     const text = customText.value.trim();
-    
     if (!title || !text) {
         formStatus.textContent = '⚠️ Por favor completa todos los campos';
         return;
     }
-    
     const id = 'custom_' + Date.now();
     prayerStorage.save(id, title, text);
-    
     customTitle.value = '';
     customText.value = '';
     charCount.textContent = '0 caracteres';
     formStatus.textContent = '✅ Oración guardada exitosamente';
-    
     loadPrayerSelect();
     updateCustomPrayersList();
-    
     setTimeout(() => formStatus.textContent = '', 3000);
 });
 
@@ -541,12 +526,10 @@ clearFormBtn.addEventListener('click', () => {
 function updateCustomPrayersList() {
     const customPrayers = prayerStorage.getAll();
     customPrayersContainer.innerHTML = '';
-    
     if (Object.keys(customPrayers).length === 0) {
         customPrayersContainer.innerHTML = '<p style="color: #666; text-align: center;">No hay oraciones guardadas</p>';
         return;
     }
-    
     Object.keys(customPrayers).forEach(id => {
         const prayer = customPrayers[id];
         const div = document.createElement('div');
@@ -578,21 +561,16 @@ window.deletePrayer = async (id) => {
     }
 };
 
-// ==================== Управління кешем ====================
 async function updateCacheInfo() {
     const allCached = await audioCache.getAllAudio();
     cachedCount.textContent = allCached.length;
-    
     const totalSize = allCached.reduce((sum, item) => sum + (item.size || 0), 0);
     cacheSize.textContent = (totalSize / 1024).toFixed(2) + ' KB';
-    
     cacheList.innerHTML = '';
-    
     if (allCached.length === 0) {
         cacheList.innerHTML = '<p style="text-align: center; color: #666;">No hay audios en caché</p>';
         return;
     }
-    
     allCached.forEach(item => {
         const div = document.createElement('div');
         div.className = 'cache-item';
