@@ -199,7 +199,7 @@ async function mergeAudioChunks(audioChunksBase64) {
     const audioBuffers = [];
     
   for (const base64Audio of audioChunksBase64) {
-   const audioBlob = base64ToBlob(base64Audio, 'audio/ogg');
+  const audioBlob = base64ToBlob(base64Audio, 'audio/ogg; codecs=opus');
     const audioUrl = URL.createObjectURL(audioBlob);
     window.open(audioUrl); // 🔎 Додаю сюди — відкриє файл у новій вкладці
 
@@ -652,6 +652,7 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
 
