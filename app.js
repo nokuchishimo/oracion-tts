@@ -199,7 +199,7 @@ async function mergeAudioChunks(audioChunksBase64) {
     const audioBuffers = [];
     
     for (const base64Audio of audioChunksBase64) {
-        const audioBlob = base64ToBlob(base64Audio, 'audio/wav');
+        const audioBlob = base64ToBlob(base64Audio, 'audio/mpeg');
         const arrayBuffer = await audioBlob.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         audioBuffers.push(audioBuffer);
@@ -648,6 +648,7 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
 
