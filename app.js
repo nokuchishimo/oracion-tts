@@ -433,8 +433,10 @@ playButton.addEventListener('click', async () => {
             });
 
             const data = await response.json();
-            console.log('audioChunks[0]:', data.audioChunks[0]);
-            console.log('довжина:', data.audioChunks[0].length);
+            console.log('audioChunks[0]:', data.audioChunks[0]);      // Виведе текст base64 або помилку
+console.log('audioChunks[0] тип:', typeof data.audioChunks[0]);
+console.log('audioChunks[0] довжина:', data.audioChunks[0]?.length);
+
 
 
             
@@ -646,6 +648,7 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
 
