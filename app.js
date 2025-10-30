@@ -433,7 +433,8 @@ playButton.addEventListener('click', async () => {
             });
 
             const data = await response.json();
-            console.log('дані від worker:', data);
+            console.log('відповідь:', data);
+
 
             
             if (data.success) {
@@ -644,5 +645,6 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
