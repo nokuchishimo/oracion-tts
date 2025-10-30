@@ -433,7 +433,8 @@ playButton.addEventListener('click', async () => {
             });
 
             const data = await response.json();
-            console.log('відповідь:', data);
+            console.log('audioChunks[0]:', data.audioChunks[0]);
+            console.log('довжина:', data.audioChunks[0].length);
 
 
             
@@ -645,6 +646,7 @@ clearCacheBtn.addEventListener('click', async () => {
         checkCache(currentPrayerId);
     }
 });
+
 
 
 
